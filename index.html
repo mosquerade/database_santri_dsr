@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Database Santri Daarus Sunnah Rangkasbitung</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+    min-height: 100vh;
+    padding: 12px;
+    color: #1f2937;
+  }
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  header {
+    background: #0f766e;
+    color: #fff;
+    padding: 20px 15px;
+    text-align: center;
+  }
+  header h1 { font-size: 1.4rem; margin-bottom: 5px; }
+  header p { opacity: 0.9; font-size: 0.9rem; }
+
+  .search-box {
+    padding: 15px;
+    background: #f0fdfa;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  #searchInput {
+    padding: 10px 12px;
+    font-size: 1rem;
+    border: 2px solid #99f6e4;
+    border-radius: 8px;
+    outline: none;
+    width: 280px;
+    max-width: 100%;
+    min-width: 0;
+  }
+  #searchInput:focus { border-color: #0f766e; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+    white-space: nowrap;
+  }
+  .btn-cari   { background: #0f766e; color: #fff; }
+  .btn-cari:hover   { background: #115e59; }
+  .btn-reset  { background: #dc2626; color: #fff; }
+  .btn-reset:hover  { background: #991b1b; }
+  .btn-import { background: #2563eb; color: #fff; }
+  .btn-import:hover { background: #1d4ed8; }
+
+  .info-bar {
+    padding: 10px 15px;
+    background: #ecfdf5;
+    font-size: 0.9rem;
+    color: #065f46;
+    border-bottom: 1px solid #d1fae5;
+    word-wrap: break-word;
+  }
+  .info-bar.error { background: #fef2f2; color: #991b1b; border-bottom-color: #fecaca; }
+  .info-bar.success { background: #ecfdf5; color: #065f46; }
+  .info-bar.warning { background: #fffbeb; color: #92400e; border-bottom-color: #fde68a; }
+
+  #fileInput { display: none; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+  }
+  thead { background: #14b8a6; color: #fff; }
+  th, td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    cursor: text;
+    word-break: break-word;
+  }
+  th { font-weight: 600; font-size: 0.95rem; }
+  td::selection, th::selection { background: #14b8a6; color: #fff; }
+  tbody tr:hover { background: #f0fdfa; }
+  tbody tr:nth-child(even) { background: #f9fafb; }
+  .no-data {
+    text-align: center;
+    padding: 30px 15px;
+    color: #6b7280;
+    font-style: italic;
+  }
+
+  footer {
+    padding: 15px;
+    text-align: center;
+    background: #f9fafb;
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+
+  @media (max-width: 900px) {
+    th, td { padding: 10px 8px; font-size: 0.9rem; }
+    #searchInput { width: 240px; }
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 8px; }
+    header { padding: 18px 12px; }
+    header h1 { font-size: 1.1rem; line-height: 1.3; }
+    header p { font-size: 0.8rem; }
+    .search-box { flex-direction: column; padding: 12px; }
+    #searchInput { width: 100%; padding: 12px 14px; }
+    .btn-group { width: 100%; }
+    .btn { flex: 1; font-size: 0.85rem; padding: 10px 8px; }
+
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tbody tr {
+      background: #fff;
+      border: 1px solid #d1fae5;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    tbody tr:nth-child(even) { background: #f0fdfa; }
+    td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 4px;
+      border-bottom: 1px dashed #e5e7eb;
+      text-align: right;
+      font-size: 0.95rem;
+    }
+    td:last-child { border-bottom: none; }
+    td::before {
+      content: attr(data-label);
+      font-weight: 600;
+      color: #0f766e;
+      text-align: left;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+    td.no-col { display: none; }
+    .no-data { padding: 25px 10px; font-size: 0.9rem; }
+    footer { font-size: 0.8rem; padding: 12px; }
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🕌 Database Santri Daarus Sunnah Rangkasbitung</h1>
+      <p>Cari data santri berdasarkan Nama, Kelas, NIK, atau NISN</p>
+    </header>
+
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="🔍 Ketik untuk mencari..." inputmode="search" autocomplete="off">
+      <div class="btn-group">
+        <button type="button" class="btn btn-reset"  id="btnReset">✖ Reset</button>
+        <button type="button" class="btn btn-import" id="btnImport">📂 Import CSV</button>
+      </div>
+      <input type="file" id="fileInput" accept=".csv">
+    </div>
+
+    <div class="info-bar" id="infoBar">⏳ Silakan ketik di kolom pencarian</div>
+
+    <table id="tabelHasil">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Nama</th>
+          <th>Kelas</th>
+          <th>NIK</th>
+          <th>NISN</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr><td colspan="5" class="no-data">🔍 Silakan ketik di kolom pencarian di atas</td></tr>
+      </tbody>
+    </table>
+
+    <footer>© 2026 - Database Santri Daarus Sunnah Rangkasbitung | Total data: <span id="totalData">0</span></footer>
+  </div>
+
+<script>
+  // ====== DATA SANTRI AWAL ======
+  var dataSantri = [
+
+  ];
+  // =================================
+
+  var tableBody   = document.getElementById('tableBody');
+  var searchInput = document.getElementById('searchInput');
+  var infoBar     = document.getElementById('infoBar');
+  var btnReset    = document.getElementById('btnReset');
+  var btnImport   = document.getElementById('btnImport');
+  var fileInput   = document.getElementById('fileInput');
+  var totalData   = document.getElementById('totalData');
+
+  function updateTotal() { totalData.textContent = dataSantri.length; }
+
+  function setInfo(pesan, tipe) {
+    infoBar.textContent = pesan;
+    infoBar.className = 'info-bar' + (tipe ? ' ' + tipe : '');
+  }
+
+  function tampilkanAwal() {
+    tableBody.innerHTML = '<tr><td colspan="5" class="no-data">🔍 Silakan ketik di kolom pencarian di atas</td></tr>';
+    setInfo('⏳ Silakan ketik di kolom pencarian');
+  }
+
+  // ====== FUNGSI PENCARIAN REAL-TIME ======
+  function cari() {
+    var kata = searchInput.value.trim();
+
+    // Jika kosong → tampilkan kondisi awal
+    if (kata === '') {
+      tampilkanAwal();
+      return;
+    }
+
+    var kataKecil = kata.toLowerCase();
+    var hasil = [];
+
+    for (var i = 0; i < dataSantri.length; i++) {
+      var s = dataSantri[i];
+      if (s.nama.toLowerCase().indexOf(kataKecil) !== -1 ||
+          s.kelas.toLowerCase().indexOf(kataKecil) !== -1 ||
+          s.nik.indexOf(kataKecil) !== -1 ||
+          s.nisn.indexOf(kataKecil) !== -1) {
+        hasil.push(s);
+      }
+    }
+
+    if (hasil.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="5" class="no-data">❌ Tidak ditemukan data untuk "<b>' + kata + '</b>"</td></tr>';
+      setInfo('Ditemukan 0 data');
+    } else {
+      var html = '';
+      for (var j = 0; j < hasil.length; j++) {
+        var x = hasil[j];
+        html += '<tr>';
+        html += '<td class="no-col" data-label="No">' + (j + 1) + '</td>';
+        html += '<td data-label="Nama">' + x.nama + '</td>';
+        html += '<td data-label="Kelas">' + x.kelas + '</td>';
+        html += '<td data-label="NIK">' + x.nik + '</td>';
+        html += '<td data-label="NISN">' + x.nisn + '</td>';
+        html += '</tr>';
+      }
+      tableBody.innerHTML = html;
+      setInfo('✅ Ditemukan ' + hasil.length + ' data untuk "' + kata + '"', 'success');
+    }
+  }
+
+  function reset() {
+    searchInput.value = '';
+    tampilkanAwal();
+    searchInput.focus();
+  }
+
+  // ====== FITUR IMPORT CSV + ANTI DUPLIKAT ======
+  function importCSV(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var teks = e.target.result;
+        if (teks.charCodeAt(0) === 0xFEFF) teks = teks.substring(1);
+
+        var baris = teks.split(/\r?\n/);
+
+        var nikSudahAda = {};
+        for (var k = 0; k < dataSantri.length; k++) {
+          nikSudahAda[dataSantri[k].nik.trim()] = true;
+        }
+
+        var dataBaru   = [];
+        var duplikat   = [];
+        var gagal      = 0;
+
+        for (var i = 1; i < baris.length; i++) {
+          var kolom = parseCSVLine(baris[i]);
+          if (kolom.length < 4 || !kolom[0].trim()) continue;
+
+          var nama  = (kolom[0] || '').trim();
+          var kelas = (kolom[1] || '').trim();
+          var nik   = (kolom[2] || '').trim();
+          var nisn  = (kolom[3] || '').trim();
+
+          if (!nama || !kelas || !nik || !nisn) { gagal++; continue; }
+
+          if (nikSudahAda[nik]) {
+            duplikat.push(nama + ' (' + nik + ')');
+            continue;
+          }
+
+          dataBaru.push({ nama: nama, kelas: kelas, nik: nik, nisn: nisn });
+          nikSudahAda[nik] = true;
+        }
+
+        if (dataBaru.length === 0 && duplikat.length === 0) {
+          setInfo('❌ File CSV kosong atau format salah. Pastikan ada 4 kolom: Nama, Kelas, NIK, NISN', 'error');
+          return;
+        }
+
+        if (dataBaru.length > 0) {
+          dataSantri = dataSantri.concat(dataBaru);
+          updateTotal();
+        }
+
+        var pesan = '';
+        if (dataBaru.length > 0) pesan += '✅ Berhasil menambah ' + dataBaru.length + ' data baru';
+        if (duplikat.length > 0) {
+          if (pesan) pesan += ' | ';
+          pesan += '⚠️ ' + duplikat.length + ' data dilewati (NIK sudah ada)';
+        }
+        if (gagal > 0) {
+          if (pesan) pesan += ' | ';
+          pesan += '❌ ' + gagal + ' baris tidak valid';
+        }
+
+        var tipeInfo = 'success';
+        if (duplikat.length > 0 && dataBaru.length === 0) tipeInfo = 'warning';
+
+        setInfo(pesan, tipeInfo);
+
+        if (duplikat.length > 0) {
+          console.log('📋 Data duplikat yang dilewati:', duplikat);
+        }
+
+        // Refresh hasil pencarian jika sedang ada kata kunci
+        if (searchInput.value.trim() !== '') cari();
+      } catch (err) {
+        setInfo('❌ Gagal membaca file: ' + err.message, 'error');
+      }
+    };
+    reader.onerror = function() { setInfo('❌ Gagal membaca file', 'error'); };
+    reader.readAsText(file, 'UTF-8');
+  }
+
+  function parseCSVLine(line) {
+    var result = [];
+    var current = '';
+    var inQuotes = false;
+    for (var i = 0; i < line.length; i++) {
+      var c = line[i];
+      if (c === '"') { inQuotes = !inQuotes; }
+      else if (c === ',' && !inQuotes) { result.push(current); current = ''; }
+      else { current += c; }
+    }
+    result.push(current);
+    return result;
+  }
+
+  // ====== EVENT LISTENERS ======
+  // 🔑 PENCARIAN REAL-TIME: dipicu setiap kali input berubah
+  searchInput.addEventListener('input', cari);
+
+  btnReset.addEventListener('click', reset);
+  btnImport.addEventListener('click', function() { fileInput.click(); });
+  fileInput.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (file) { importCSV(file); fileInput.value = ''; }
+  });
+
+  tampilkanAwal();
+  updateTotal();
+
+  // ====== AUTO-LOAD DATA DARI FILE CSV ONLINE ======
+// Upload file data-santri.csv ke repository/folder yang sama
+// Lalu uncomment kode di bawah:
+
+function autoLoadCSV() {
+  fetch('data_santri.csv')
+    .then(function(response) { return response.text(); })
+    .then(function(teks) {
+      if (teks.charCodeAt(0) === 0xFEFF) teks = teks.substring(1);
+      var baris = teks.split(/\r?\n/);
+      var dataBaru = [];
+      for (var i = 1; i < baris.length; i++) {
+        var kolom = parseCSVLine(baris[i]);
+        if (kolom.length < 4 || !kolom[0].trim()) continue;
+        var nama  = (kolom[0] || '').trim();
+        var kelas = (kolom[1] || '').trim();
+        var nik   = (kolom[2] || '').trim();
+        var nisn  = (kolom[3] || '').trim();
+        if (nama && kelas && nik && nisn) {
+          dataBaru.push({ nama: nama, kelas: kelas, nik: nik, nisn: nisn });
+        }
+      }
+      // Gabungkan dengan data LocalStorage (anti duplikat)
+      var nikSudahAda = {};
+      for (var k = 0; k < dataSantri.length; k++) {
+        nikSudahAda[dataSantri[k].nik] = true;
+      }
+      var ditambah = 0;
+      for (var j = 0; j < dataBaru.length; j++) {
+        if (!nikSudahAda[dataBaru[j].nik]) {
+          dataSantri.push(dataBaru[j]);
+          nikSudahAda[dataBaru[j].nik] = true;
+          ditambah++;
+        }
+      }
+      if (ditambah > 0) {
+        simpanData();
+        updateTotal();
+      }
+    })
+    .catch(function(err) {
+      console.log('File data-santri.csv tidak ditemukan (opsional)');
+    });
+}
+
+// Panggil setelah muatData():
+muatData();
+updateTotal();
+tampilkanAwal();
+autoLoadCSV(); // ← tambahkan ini
+
+</script>
+</body>
+</html>
