@@ -27,9 +27,26 @@
     color: #fff;
     padding: 20px 15px;
     text-align: center;
+    position: relative;
   }
   header h1 { font-size: 1.4rem; margin-bottom: 5px; }
   header p { opacity: 0.9; font-size: 0.9rem; }
+
+  /* 🔐 Tombol Login Admin di pojok kanan atas */
+  .btn-login-admin {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .btn-login-admin:hover { background: rgba(255,255,255,0.3); }
 
   .search-box {
     padding: 15px;
@@ -72,6 +89,8 @@
   .btn-export:hover { background: #166534; }
   .btn-sync   { background: #7c3aed; color: #fff; }
   .btn-sync:hover   { background: #6d28d9; }
+  .btn-logout { background: #64748b; color: #fff; }
+  .btn-logout:hover { background: #475569; }
 
   .info-bar {
     padding: 10px 15px;
@@ -85,6 +104,18 @@
   .info-bar.success { background: #ecfdf5; color: #065f46; }
   .info-bar.warning { background: #fffbeb; color: #92400e; border-bottom-color: #fde68a; }
   .info-bar.info    { background: #eff6ff; color: #1e40af; border-bottom-color: #bfdbfe; }
+
+  /* 🔐 Banner Mode Admin */
+  .admin-banner {
+    padding: 8px 15px;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    color: #78350f;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    display: none;
+  }
+  .admin-banner.show { display: block; }
 
   #fileInput { display: none; }
 
@@ -123,6 +154,54 @@
     color: #6b7280;
   }
 
+  /* ====== MODAL LOGIN ====== */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9998;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    padding: 30px 25px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal h2 {
+    color: #0f766e;
+    margin-bottom: 8px;
+    font-size: 1.3rem;
+    text-align: center;
+  }
+  .modal p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .modal input {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1rem;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
+    outline: none;
+    margin-bottom: 15px;
+  }
+  .modal input:focus { border-color: #0f766e; }
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  .modal-buttons .btn { flex: 1; }
+
   @media (max-width: 900px) {
     th, td { padding: 10px 8px; font-size: 0.9rem; }
     #searchInput { width: 240px; }
@@ -131,8 +210,9 @@
   @media (max-width: 600px) {
     body { padding: 8px; }
     header { padding: 18px 12px; }
-    header h1 { font-size: 1.1rem; line-height: 1.3; }
+    header h1 { font-size: 1.1rem; line-height: 1.3; padding-right: 80px; }
     header p { font-size: 0.8rem; }
+    .btn-login-admin { top: 8px; right: 8px; font-size: 0.75rem; padding: 5px 10px; }
     .search-box { flex-direction: column; padding: 12px; }
     #searchInput { width: 100%; padding: 12px 14px; }
     .btn-group { width: 100%; flex-wrap: wrap; }
@@ -178,16 +258,24 @@
     <header>
       <h1>🕌 Database Santri Daarus Sunnah Rangkasbitung</h1>
       <p>Cari data santri berdasarkan Nama, Kelas, NIK, atau NISN</p>
+      <button type="button" class="btn-login-admin" id="btnLoginAdmin">🔐 Admin</button>
     </header>
+
+    <!-- 🔐 Banner Mode Admin -->
+    <div class="admin-banner" id="adminBanner">
+      🔓 MODE ADMIN AKTIF — Anda dapat mengimport, export, dan mengelola data
+    </div>
 
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="🔍 Ketik untuk mencari..." inputmode="search" autocomplete="off">
-      <div class="btn-group">
-        <button type="button" class="btn btn-reset"  id="btnReset">✖ Reset</button>
-        <button type="button" class="btn btn-import" id="btnImport">📂 Import CSV</button>
-        <button type="button" class="btn btn-export" id="btnExport">💾 Export CSV</button>
-        <button type="button" class="btn btn-sync"   id="btnSync">🔄 Sync</button>
-        <button type="button" class="btn btn-hapus"  id="btnHapus">🗑️ Hapus Lokal</button>
+      <div class="btn-group" id="btnGroup">
+        <button type="button" class="btn btn-reset" id="btnReset">✖ Reset</button>
+        <!-- Tombol admin-only (disembunyikan default) -->
+        <button type="button" class="btn btn-import" id="btnImport" style="display:none;">📂 Import CSV</button>
+        <button type="button" class="btn btn-export" id="btnExport" style="display:none;">💾 Export CSV</button>
+        <button type="button" class="btn btn-sync"   id="btnSync"   style="display:none;">🔄 Sync</button>
+        <button type="button" class="btn btn-hapus"  id="btnHapus"  style="display:none;">🗑️ Hapus Lokal</button>
+        <button type="button" class="btn btn-logout" id="btnLogout" style="display:none;">🚪 Logout</button>
       </div>
       <input type="file" id="fileInput" accept=".csv">
     </div>
@@ -210,25 +298,40 @@
     </table>
 
     <footer>
-      © 2026 - Database Santri Daarus Sunnah Rangkasbitung |
+      © 2026 - Database Santri Daarus Sunnah Rangkasbitung by Andri Lesmana |
       Total data: <span id="totalData">0</span> |
       <span id="statusSimpan">🔄 Memuat...</span>
     </footer>
   </div>
 
+  <!-- 🔐 MODAL LOGIN ADMIN -->
+  <div class="modal-overlay" id="modalLogin">
+    <div class="modal">
+      <h2>🔐 Login Admin</h2>
+      <p>Masukkan password untuk mengakses fitur manajemen data</p>
+      <input type="password" id="inputPassword" placeholder="Password admin..." autocomplete="off">
+      <div class="modal-buttons">
+        <button type="button" class="btn btn-reset" id="btnBatalLogin">Batal</button>
+        <button type="button" class="btn btn-cari" id="btnMasukLogin" style="background:#0f766e;">Masuk</button>
+      </div>
+    </div>
+  </div>
+
 <script>
   // ====== KONFIGURASI ======
   var STORAGE_KEY = 'dataSantriDaarusSunnah';
+  var ADMIN_KEY   = 'adminSessionDaarusSunnah';
 
-  // 🔑 GANTI URL INI dengan URL file CSV di GitHub Anda
-  // Format: https://raw.githubusercontent.com/USERNAME/REPO/BRANCH/data-santri.csv
-  // Contoh: https://raw.githubusercontent.com/ahmad/database-santri/main/data-santri.csv
-  var URL_CSV_UTAMA = 'data-santri.csv'; // file di folder yang sama dengan index.html
+  // 🔑 GANTI PASSWORD DI SINI (minimal 6 karakter)
+  var ADMIN_PASSWORD = 'daarussunnah2026';
+
+  var URL_CSV_UTAMA = 'data-santri.csv';
 
   // ====== VARIABEL GLOBAL ======
-  var dataSantri = [];        // data gabungan (online + lokal)
-  var dataLokal = [];         // data dari LocalStorage (hasil import manual)
-  var dataOnline = [];        // data dari file CSV di GitHub
+  var dataSantri = [];
+  var dataLokal = [];
+  var dataOnline = [];
+  var isAdmin = false;
 
   var tableBody    = document.getElementById('tableBody');
   var searchInput  = document.getElementById('searchInput');
@@ -238,11 +341,79 @@
   var btnExport    = document.getElementById('btnExport');
   var btnHapus     = document.getElementById('btnHapus');
   var btnSync      = document.getElementById('btnSync');
+  var btnLogout    = document.getElementById('btnLogout');
+  var btnLoginAdmin = document.getElementById('btnLoginAdmin');
   var fileInput    = document.getElementById('fileInput');
   var totalData    = document.getElementById('totalData');
   var statusSimpan = document.getElementById('statusSimpan');
+  var adminBanner  = document.getElementById('adminBanner');
+  var modalLogin   = document.getElementById('modalLogin');
+  var inputPassword = document.getElementById('inputPassword');
+  var btnBatalLogin = document.getElementById('btnBatalLogin');
+  var btnMasukLogin = document.getElementById('btnMasukLogin');
 
-  // ====== FUNGSI LOCALSTORAGE ======
+  // ====== SISTEM LOGIN ADMIN ======
+  function cekSesiAdmin() {
+    try {
+      if (sessionStorage.getItem(ADMIN_KEY) === 'ok') {
+        masukModeAdmin(false);
+      }
+    } catch (e) {}
+  }
+
+  function bukaModalLogin() {
+    modalLogin.classList.add('show');
+    inputPassword.value = '';
+    setTimeout(function() { inputPassword.focus(); }, 100);
+  }
+
+  function tutupModalLogin() {
+    modalLogin.classList.remove('show');
+    inputPassword.value = '';
+  }
+
+  function cobaLogin() {
+    var pass = inputPassword.value;
+    if (pass === ADMIN_PASSWORD) {
+      try { sessionStorage.setItem(ADMIN_KEY, 'ok'); } catch (e) {}
+      masukModeAdmin(true);
+      tutupModalLogin();
+      setInfo('✅ Login admin berhasil. Fitur manajemen data aktif.', 'success');
+    } else {
+      setInfo('❌ Password salah!', 'error');
+      inputPassword.value = '';
+      inputPassword.focus();
+      // Efek getar
+      inputPassword.style.borderColor = '#dc2626';
+      setTimeout(function() { inputPassword.style.borderColor = ''; }, 1000);
+    }
+  }
+
+  function masukModeAdmin(tampilkanNotif) {
+    isAdmin = true;
+    btnImport.style.display = '';
+    btnExport.style.display = '';
+    btnSync.style.display = '';
+    btnHapus.style.display = '';
+    btnLogout.style.display = '';
+    btnLoginAdmin.textContent = '🔓 Admin';
+    adminBanner.classList.add('show');
+  }
+
+  function keluarModeAdmin() {
+    isAdmin = false;
+    btnImport.style.display = 'none';
+    btnExport.style.display = 'none';
+    btnSync.style.display = 'none';
+    btnHapus.style.display = 'none';
+    btnLogout.style.display = 'none';
+    btnLoginAdmin.textContent = '🔐 Admin';
+    adminBanner.classList.remove('show');
+    try { sessionStorage.removeItem(ADMIN_KEY); } catch (e) {}
+    setInfo('🔒 Anda telah logout dari mode admin', 'info');
+  }
+
+  // ====== LOCALSTORAGE ======
   function muatLokal() {
     try {
       var tersimpan = localStorage.getItem(STORAGE_KEY);
@@ -250,9 +421,7 @@
         dataLokal = JSON.parse(tersimpan);
         return true;
       }
-    } catch (err) {
-      console.error('Gagal memuat data lokal:', err);
-    }
+    } catch (err) { console.error('Gagal memuat data lokal:', err); }
     dataLokal = [];
     return false;
   }
@@ -268,13 +437,10 @@
     }
   }
 
-  // ====== FUNGSI GABUNG DATA ======
-  // 🔑 Gabungkan data online + lokal (anti duplikat by NIK)
   function gabungData() {
     var gabung = [];
     var nikSudahAda = {};
 
-    // Prioritas 1: Data online (dari GitHub)
     for (var i = 0; i < dataOnline.length; i++) {
       var s = dataOnline[i];
       if (!nikSudahAda[s.nik]) {
@@ -283,7 +449,6 @@
       }
     }
 
-    // Prioritas 2: Data lokal (hasil import manual)
     for (var j = 0; j < dataLokal.length; j++) {
       var x = dataLokal[j];
       if (!nikSudahAda[x.nik]) {
@@ -296,13 +461,12 @@
     updateTotal();
   }
 
-  // ====== FUNGSI LOAD DATA DARI GITHUB ======
   function loadDariServer() {
     setInfo('⏳ Memuat data dari server...', 'info');
     statusSimpan.textContent = '🔄 Memuat dari server...';
     statusSimpan.style.color = '#1e40af';
 
-    fetch(URL_CSV_UTAMA + '?t=' + Date.now()) // ?t=... untuk hindari cache
+    fetch(URL_CSV_UTAMA + '?t=' + Date.now())
       .then(function(response) {
         if (!response.ok) throw new Error('File tidak ditemukan (HTTP ' + response.status + ')');
         return response.text();
@@ -330,27 +494,22 @@
         gabungData();
 
         var pesan = '✅ Berhasil memuat ' + dataOnline.length + ' data dari server';
-        if (dataLokal.length > 0) {
-          pesan += ' + ' + dataLokal.length + ' data lokal';
-        }
+        if (dataLokal.length > 0) pesan += ' + ' + dataLokal.length + ' data lokal';
         setInfo(pesan, 'success');
         statusSimpan.textContent = '🌐 Data online: ' + dataOnline.length + ' | Lokal: ' + dataLokal.length;
         statusSimpan.style.color = '#065f46';
-
         tampilkanAwal();
       })
       .catch(function(err) {
         console.error('Error load server:', err);
-        // Fallback: pakai data lokal saja
         gabungData();
-        setInfo('⚠️ Gagal load dari server (' + err.message + '). Menampilkan data lokal saja.', 'warning');
+        setInfo('⚠️ Gagal load dari server. Menampilkan data lokal saja.', 'warning');
         statusSimpan.textContent = '⚠️ Mode offline - Data lokal: ' + dataLokal.length;
         statusSimpan.style.color = '#92400e';
         tampilkanAwal();
       });
   }
 
-  // ====== FUNGSI UMUM ======
   function updateTotal() { totalData.textContent = dataSantri.length; }
 
   function setInfo(pesan, tipe) {
@@ -411,8 +570,12 @@
     searchInput.focus();
   }
 
-  // ====== IMPORT CSV (SIMPAN KE LOCAL) ======
+  // ====== FITUR ADMIN-ONLY ======
   function importCSV(file) {
+    if (!isAdmin) {
+      setInfo('🔒 Fitur ini hanya untuk admin', 'error');
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function(e) {
       try {
@@ -462,9 +625,7 @@
         }
 
         var pesan = '';
-        if (dataBaru.length > 0) {
-          pesan += '✅ Berhasil menambah ' + dataBaru.length + ' data (tersimpan lokal)';
-        }
+        if (dataBaru.length > 0) pesan += '✅ Berhasil menambah ' + dataBaru.length + ' data';
         if (duplikat.length > 0) {
           if (pesan) pesan += ' | ';
           pesan += '⚠️ ' + duplikat.length + ' dilewati (duplikat)';
@@ -473,11 +634,9 @@
           if (pesan) pesan += ' | ';
           pesan += '❌ ' + gagal + ' baris tidak valid';
         }
-        pesan += ' 💡 Tips: Export CSV lalu upload ke GitHub agar data tersinkron di semua device';
 
         var tipeInfo = 'success';
         if (duplikat.length > 0 && dataBaru.length === 0) tipeInfo = 'warning';
-
         setInfo(pesan, tipeInfo);
 
         if (searchInput.value.trim() !== '') cari();
@@ -489,8 +648,11 @@
     reader.readAsText(file, 'UTF-8');
   }
 
-  // ====== EXPORT CSV ======
   function exportCSV() {
+    if (!isAdmin) {
+      setInfo('🔒 Fitur ini hanya untuk admin', 'error');
+      return;
+    }
     if (dataSantri.length === 0) {
       setInfo('⚠️ Tidak ada data untuk di-export', 'warning');
       return;
@@ -520,13 +682,16 @@
     link.click();
     document.body.removeChild(link);
 
-    setInfo('✅ Backup diunduh: ' + namaFile + ' 💡 Upload file ini ke GitHub agar tersinkron di semua device', 'success');
+    setInfo('✅ Backup diunduh: ' + namaFile, 'success');
   }
 
-  // ====== HAPUS DATA LOKAL SAJA ======
   function hapusLokal() {
+    if (!isAdmin) {
+      setInfo('🔒 Fitur ini hanya untuk admin', 'error');
+      return;
+    }
     if (dataLokal.length === 0) {
-      setInfo('ℹ️ Tidak ada data lokal untuk dihapus. Data online tetap ada.', 'info');
+      setInfo('ℹ️ Tidak ada data lokal untuk dihapus', 'info');
       return;
     }
 
@@ -535,7 +700,6 @@
       'Data online dari GitHub (' + dataOnline.length + ' data) TIDAK akan terhapus.\n\n' +
       'Lanjutkan?'
     );
-
     if (!konfirmasi) return;
 
     dataLokal = [];
@@ -545,8 +709,11 @@
     setInfo('🗑️ Data lokal dihapus. Data online (' + dataOnline.length + ') tetap ada.', 'warning');
   }
 
-  // ====== SYNC MANUAL ======
   function syncManual() {
+    if (!isAdmin) {
+      setInfo('🔒 Fitur ini hanya untuk admin', 'error');
+      return;
+    }
     loadDariServer();
   }
 
@@ -568,6 +735,32 @@
   searchInput.addEventListener('input', cari);
   btnReset.addEventListener('click', reset);
 
+  // 🔐 Login Admin
+  btnLoginAdmin.addEventListener('click', function() {
+    if (isAdmin) {
+      // Jika sudah login, tanyakan apakah mau logout
+      if (confirm('Anda sudah login sebagai admin. Logout sekarang?')) {
+        keluarModeAdmin();
+      }
+    } else {
+      bukaModalLogin();
+    }
+  });
+
+  btnMasukLogin.addEventListener('click', cobaLogin);
+  btnBatalLogin.addEventListener('click', tutupModalLogin);
+
+  inputPassword.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' || e.keyCode === 13) cobaLogin();
+  });
+
+  // Tutup modal saat klik di luar
+  modalLogin.addEventListener('click', function(e) {
+    if (e.target === modalLogin) tutupModalLogin();
+  });
+
+  btnLogout.addEventListener('click', keluarModeAdmin);
+
   btnImport.addEventListener('click', function() { fileInput.click(); });
   fileInput.addEventListener('change', function(e) {
     var file = e.target.files[0];
@@ -579,6 +772,7 @@
   btnSync.addEventListener('click', syncManual);
 
   // ====== INISIALISASI ======
+  cekSesiAdmin();
   muatLokal();
   loadDariServer();
 </script>
